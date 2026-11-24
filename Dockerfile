@@ -1,25 +1,22 @@
-# --- base ---
+# Slim python image keeps container small
 FROM python:3.11-slim
 
-# system deps (faster tokenizers, wheels)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential git curl && \
-    rm -rf /var/lib/apt/lists/*
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
 
-# workdir
 WORKDIR /app
 
-# copy only requirements first for better caching
-COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r /app/requirements.txt
+# Install deps first (better cache)
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# copy source
-COPY . /app
+# Copy the rest of the app
+COPY . .
 
-# uvicorn will bind to 0.0.0.0 in Render
+# Render sets $PORT. Fallback to 8000 for local runs.
 ENV PORT=8000
 EXPOSE 8000
 
-# start server
-CMD ["uvicorn", "--app-dir", "src", "api.server:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use sh so ${PORT} expands
+CMD sh -c 'uvicorn --app-dir src api.server:app --host 0.0.0.0 --port ${PORT:-8000}'

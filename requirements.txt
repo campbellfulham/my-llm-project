@@ -1,11 +1,6 @@
-transformers>=4.44
-torch --extra-index-url https://download.pytorch.org/whl/cpu
-datasets
-evaluate
-rouge-score
-pydantic>=2
 fastapi
 uvicorn[standard]
+pydantic>=2
 python-dotenv
 requests
 openai>=1.40.0
